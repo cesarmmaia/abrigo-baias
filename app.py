@@ -63,6 +63,11 @@ def deletar_desinfeccao(id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/relatorio')
+def pagina_relatorio():
+    return render_template('relatorio.html')
+
+
+@app.route('/relatorio')
 def relatorio():
     try:
         desinfeccoes = db.get_all_desinfeccoes()
@@ -84,6 +89,42 @@ def relatorio():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/relatorio')
+def api_relatorio():
+    try:
+        desinfeccoes = db.get_all_desinfeccoes()
+
+        # Processar dados para relatório
+        for desinfeccao in desinfeccoes:
+            data_desinfeccao = datetime.strptime(desinfeccao['data_desinfeccao'], '%Y-%m-%d')
+            dias_desde_desinfeccao = (datetime.now() - data_desinfeccao).days
+            
+            # 🔥 CORREÇÃO: Evitar valores negativos
+            if dias_desde_desinfeccao < 0:
+                # Se a data for futura, considerar como se fosse hoje
+                dias_desde_desinfeccao = 0
+                desinfeccao['status'] = 'ok'
+            else:
+                # Lógica normal para datas passadas
+                if dias_desde_desinfeccao >= 15:
+                    desinfeccao['status'] = 'pendente'
+                elif dias_desde_desinfeccao >= 10:
+                    desinfeccao['status'] = 'proximo'
+                else:
+                    desinfeccao['status'] = 'ok'
+
+            desinfeccao['dias_desde_desinfeccao'] = dias_desde_desinfeccao
+
+        #  CORREÇÃO: Ordenar por data mais recente primeiro
+        desinfeccoes_ordenadas = sorted(
+            desinfeccoes, 
+            key=lambda x: x['data_desinfeccao'], 
+            reverse=True
+        )
+
+        return jsonify(desinfeccoes_ordenadas)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/debug-static')
 def debug_static():
