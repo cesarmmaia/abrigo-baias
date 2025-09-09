@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos - Sistema de Desinfecção</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .calendar-day {
+            border: 1px solid #dee2e6;
+            min-height: 100px;
+            position: relative;
+        }
+        .calendar-day .day-number {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-weight: bold;
+        }
+        .agendamento-item {
+            font-size: 0.8rem;
+            padding: 2px 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .today {
+            background-color: #e3f2fd;
+        }
+        .has-agendamento {
+            background-color: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Agendamentos de Desinfecção</h1>
+                <div>
+                    <a href="/" class="btn btn-outline-light btn-sm me-2">
+                        <i class="bi bi-house"></i> Início
+                    </a>
+                    <a href="/relatorio" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-bar-chart"></i> Relatórios
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-plus-circle"></i> Novo Agendamento
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formAgendamento">
+                            <div class="mb-3">
+                                <label class="form-label">Baia</label>
+                                <select class="form-select" id="agendamentoBaia" required>
+                                    <option value="">Selecione a baia</option>
+                                    <!-- Opções serão preenchidas via JavaScript -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Data do Agendamento</label>
+                                <input type="date" class="form-control" id="agendamentoData" required>
+                                <div class="form-text" id="proximaDataInfo"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Método</label>
+                                <select class="form-select" id="agendamentoMetodo" required>
+                                    <option value="">Selecione o método</option>
+                                    <option value="hipoclorito">Hipoclorito</option>
+                                    <option value="ozonio">Ozônio</option>
+                                    <option value="vapor">Vapor</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Observações</label>
+                                <textarea class="form-control" id="agendamentoObservacao" rows="2"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-calendar-plus"></i> Agendar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-gear"></i> Configurações
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Intervalo entre desinfecções (dias)</label>
+                            <input type="number" class="form-control" id="intervaloDias" min="1" max="30" value="15">
+                        </div>
+                        <button class="btn btn-outline-secondary w-100" onclick="salvarConfiguracao()">
+                            <i class="bi bi-check-circle"></i> Salvar Configuração
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-calendar-month"></i> Calendário de Agendamentos
+                        </h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="previousMonth()">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <span class="mx-2 fw-bold" id="currentMonth"></span>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="nextMonth()">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="calendar" class="row">
+                            <!-- Calendário será gerado via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-list-check"></i> Agendamentos Pendentes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Baia</th>
+                                        <th>Data Prevista</th>
+                                        <th>Método</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaAgendamentos">
+                                    <!-- Agendamentos serão carregados via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Realizar Agendamento -->
+    <div class="modal fade" id="modalRealizarAgendamento" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Realizar Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Confirmar realização da desinfecção da <strong id="modalBaia"></strong>?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Realização</label>
+                        <input type="date" class="form-control" id="dataRealizacao" value="{{ now().strftime('%Y-%m-%d') }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarRealizacao()">
+                        <i class="bi bi-check-circle"></i> Confirmar Realização
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/agendamentos.js') }}"></script>
+</body>
+</html>
