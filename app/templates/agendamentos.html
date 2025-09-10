@@ -502,7 +502,7 @@
             if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
             
             try {
-                const response = await fetch(`/agendamentos/${id}/status`, {
+                const response = await fetch(`api/agendamentos/${id}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
