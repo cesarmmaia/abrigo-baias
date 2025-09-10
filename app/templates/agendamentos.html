@@ -526,7 +526,7 @@
             if (!confirm('Tem certeza que deseja excluir este agendamento?')) return;
             
             try {
-                const response = await fetch(`/agendamentos/${id}`, {
+                const response = await fetch(`api/agendamentos/${id}`, {
                     method: 'DELETE'
                 });
                 
