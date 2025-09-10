@@ -4,7 +4,7 @@ from app.models.database import Database
 import os
 from datetime import datetime, timedelta
 
-app = Flask(__name__, template_folder='app/templates', static_folder='static', static_url_path='/static')
+app = Flask(__name__, template_folder='app/templates') #, static_folder='static', static_url_path='/static') #
 CORS(app)
 
 # Configuração

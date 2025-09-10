@@ -1,0 +1,99 @@
+:root {
+    --color-ok: #28a745;
+    --color-proximo: #ffc107;
+    --color-pendente: #dc3545;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.status-badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: bold;
+    border-radius: 0.25rem;
+}
+
+.status-ok {
+    background-color: var(--color-ok);
+    color: white;
+}
+
+.status-proximo {
+    background-color: var(--color-proximo);
+    color: black;
+}
+
+.status-pendente {
+    background-color: var(--color-pendente);
+    color: white;
+}
+
+.status-concluido {
+    background-color: var(--color-ok);
+    color: white;
+}
+
+.status-cancelado {
+    background-color: var(--color-pendente);
+    color: white;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: #2c3e50;
+    border-color: #2c3e50;
+}
+
+.btn-primary:hover {
+    background-color: #1a252f;
+    border-color: #1a252f;
+}
+
+.baia-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+:focus {
+    outline: 2px solid #2c3e50;
+    outline-offset: 2px;
+}
