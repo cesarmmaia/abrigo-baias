@@ -21,10 +21,11 @@ body {
     margin-bottom: 1.5rem;
 }
 
-.status {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
+.status-badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
     font-weight: bold;
+    border-radius: 0.25rem;
 }
 
 .status-ok {
@@ -38,6 +39,16 @@ body {
 }
 
 .status-pendente {
+    background-color: var(--color-pendente);
+    color: white;
+}
+
+.status-concluido {
+    background-color: var(--color-ok);
+    color: white;
+}
+
+.status-cancelado {
     background-color: var(--color-pendente);
     color: white;
 }
@@ -57,11 +68,16 @@ body {
     border-color: #1a252f;
 }
 
+.baia-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
 @media (max-width: 768px) {
     .table-responsive {
         font-size: 0.875rem;
     }
-
+    
     .btn {
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;

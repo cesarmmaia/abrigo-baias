@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos - Sistema de Desinfecção</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .status-badge {
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            border-radius: 0.375rem;
+        }
+        .status-pendente {
+            background-color: #ffc107;
+            color: black;
+        }
+        .status-concluido {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-cancelado {
+            background-color: #dc3545;
+            color: white;
+        }
+        .baia-dropdown {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Agendamentos de Desinfecção</h1>
+                <div>
+                    <a href="/" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-house"></i> Início
+                    </a>
+                    <a href="/relatorio" class="btn btn-outline-light btn-sm ms-2">
+                        <i class="bi bi-bar-chart"></i> Relatórios
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0"><i class="bi bi-calendar-plus"></i> Novo Agendamento</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="formAgendamento">
+                            <div class="mb-3">
+                                <label for="numero_baia" class="form-label">Número da Baia *</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" id="dropdownBaia" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Selecione uma baia
+                                    </button>
+                                    <input type="hidden" id="numero_baia" name="numero_baia" required>
+                                    <ul class="dropdown-menu baia-dropdown w-100" aria-labelledby="dropdownBaia">
+                                        <li><h6 class="dropdown-header">Baias Disponíveis</h6></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <!-- Baias serão geradas via JavaScript -->
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="data_agendamento" class="form-label">Data do Agendamento *</label>
+                                <input type="date" class="form-control" id="data_agendamento" name="data_agendamento" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="metodo" class="form-label">Método Utilizado *</label>
+                                <select class="form-select" id="metodo" name="metodo" required>
+                                    <option value="">Selecione um método</option>
+                                    <option value="hipoclorito">Hipoclorito</option>
+                                    <option value="ozonio">Ozônio</option>
+                                    <option value="vapor">Vapor</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="observacao" class="form-label">Observações</label>
+                                <textarea class="form-control" id="observacao" name="observacao" rows="2" placeholder="Informações adicionais sobre o agendamento"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-calendar-check"></i> Agendar Desinfecção
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0"><i class="bi bi-list-task"></i> Agendamentos</h2>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="carregarAgendamentos()">
+                            <i class="bi bi-arrow-clockwise"></i> Atualizar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Baia</th>
+                                        <th>Data Prevista</th>
+                                        <th>Método</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaAgendamentos">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="bi bi-calendar-x display-4 d-block mb-2"></i>
+                                            Nenhum agendamento encontrado
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gerar dropdown de baias
+            const dropdownMenu = document.querySelector('.baia-dropdown');
+            const dropdownButton = document.getElementById('dropdownBaia');
+            const hiddenInput = document.getElementById('numero_baia');
+            
+            for (let i = 1; i <= 20; i++) {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.className = 'dropdown-item';
+                a.href = '#';
+                a.textContent = `Baia ${i}`;
+                a.onclick = function(e) {
+                    e.preventDefault();
+                    dropdownButton.textContent = `Baia ${i}`;
+                    hiddenInput.value = i;
+                    hiddenInput.setCustomValidity('');
+                };
+                li.appendChild(a);
+                dropdownMenu.appendChild(li);
+            }
+            
+            // Carregar agendamentos
+            carregarAgendamentos();
+            
+            // Configurar formulário
+            document.getElementById('formAgendamento').addEventListener('submit', salvarAgendamento);
+        });
+
+        async function carregarAgendamentos() {
+            try {
+                const response = await fetch('/agendamentos');
+                const agendamentos = await response.json();
+                exibirAgendamentos(agendamentos);
+            } catch (error) {
+                console.error('Erro ao carregar agendamentos:', error);
+            }
+        }
+
+        function exibirAgendamentos(agendamentos) {
+            const tbody = document.getElementById('listaAgendamentos');
+            
+            if (agendamentos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="bi bi-calendar-x display-4 d-block mb-2"></i>
+                            Nenhum agendamento encontrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            agendamentos.forEach(agendamento => {
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td>Baia ${agendamento.numero_baia}</td>
+                    <td>${new Date(agendamento.data_agendamento).toLocaleDateString()}</td>
+                    <td>${formatarMetodo(agendamento.metodo)}</td>
+                    <td><span class="status-badge status-${agendamento.status}">${formatarStatus(agendamento.status)}</span></td>
+                    <td>
+                        ${agendamento.status === 'pendente' ? `
+                        <button class="btn btn-sm btn-success" onclick="concluirAgendamento(${agendamento.id})" title="Concluir">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="cancelarAgendamento(${agendamento.id})" title="Cancelar">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletarAgendamento(${agendamento.id})" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        function formatarMetodo(metodo) {
+            const metodoMap = {
+                'hipoclorito': 'Hipoclorito',
+                'ozonio': 'Ozônio',
+                'vapor': 'Vapor'
+            };
+            return metodoMap[metodo] || metodo;
+        }
+
+        function formatarStatus(status) {
+            const statusMap = {
+                'pendente': 'Pendente',
+                'concluido': 'Concluído',
+                'cancelado': 'Cancelado'
+            };
+            return statusMap[status] || status;
+        }
+
+        async function salvarAgendamento(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const agendamento = {
+                numero_baia: parseInt(formData.get('numero_baia')),
+                data_agendamento: formData.get('data_agendamento'),
+                metodo: formData.get('metodo'),
+                observacao: formData.get('observacao')
+            };
+            
+            try {
+                const response = await fetch('/agendamentos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(agendamento)
+                });
+                
+                if (response.ok) {
+                    alert('Agendamento criado com sucesso!');
+                    event.target.reset();
+                    document.getElementById('dropdownBaia').textContent = 'Selecione uma baia';
+                    document.getElementById('numero_baia').value = '';
+                    carregarAgendamentos();
+                } else {
+                    throw new Error('Erro ao criar agendamento');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao criar agendamento. Verifique o console para detalhes.');
+            }
+        }
+
+        async function concluirAgendamento(id) {
+            try {
+                const response = await fetch(`/agendamentos/${id}/concluir`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('Agendamento concluído e desinfecção registrada!');
+                    carregarAgendamentos();
+                } else {
+                    throw new Error('Erro ao concluir agendamento');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao concluir agendamento. Verifique o console para detalhes.');
+            }
+        }
+
+        async function cancelarAgendamento(id) {
+            if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
+            
+            try {
+                const response = await fetch(`/agendamentos/${id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'cancelado' })
+                });
+                
+                if (response.ok) {
+                    alert('Agendamento cancelado com sucesso!');
+                    carregarAgendamentos();
+                } else {
+                    throw new Error('Erro ao cancelar agendamento');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cancelar agendamento. Verifique o console para detalhes.');
+            }
+        }
+
+        async function deletarAgendamento(id) {
+            if (!confirm('Tem certeza que deseja excluir este agendamento?')) return;
+            
+            try {
+                const response = await fetch(`/agendamentos/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Agendamento excluído com sucesso!');
+                    carregarAgendamentos();
+                } else {
+                    throw new Error('Erro ao excluir agendamento');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao excluir agendamento. Verifique o console para detalhes.');
+            }
+        }
+    </script>
+</body>
+</html>
