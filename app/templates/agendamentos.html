@@ -243,7 +243,7 @@
         async function carregarAgendamentos() {
             try {
                 console.log('Carregando agendamentos...');
-                const response = await fetch('/agendamentos');
+                const response = await fetch('/api/agendamentos');
                 
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status}`);
@@ -403,7 +403,7 @@
 
         async function mostrarDetalhes(id) {
             try {
-                const response = await fetch('/agendamentos');
+                const response = await fetch('/api/agendamentos');
                 const agendamentos = await response.json();
                 const agendamento = agendamentos.find(a => a.id === id);
                 
@@ -482,7 +482,7 @@
             if (!confirm('Deseja concluir este agendamento e registrar a desinfecção?')) return;
             
             try {
-                const response = await fetch(`/agendamentos/${id}/concluir`, {
+                const response = await fetch(`api/agendamentos/${id}/concluir`, { // inseri o api/
                     method: 'POST'
                 });
                 

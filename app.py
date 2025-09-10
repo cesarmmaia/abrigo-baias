@@ -4,7 +4,7 @@ from app.models.database import Database
 import os
 from datetime import datetime, timedelta
 
-app = Flask(__name__, template_folder='app/templates') #, static_folder='static', static_url_path='/static') #
+app = Flask(__name__, template_folder='app/templates', static_folder='app/static', static_url_path='/static') #
 CORS(app)
 
 # Configuração
@@ -17,9 +17,11 @@ db = Database()
 def index():
     return render_template('index.html')
 
+# Página de agendamentos (HTML)
 @app.route('/agendamentos')
 def pagina_agendamentos():
     return render_template('agendamentos.html')
+
 
 @app.route('/relatorio')
 def pagina_relatorio():
@@ -72,7 +74,9 @@ def deletar_desinfeccao(id):
         return jsonify({'error': str(e)}), 500
 
 # Rotas para Agendamentos
-@app.route('/agendamentos', methods=['GET'])
+
+# Listar agendamentos
+@app.route('/api/agendamentos', methods=['GET'])
 def listar_agendamentos():
     try:
         agendamentos = db.get_all_agendamentos()
@@ -80,7 +84,9 @@ def listar_agendamentos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/agendamentos', methods=['POST'])
+
+# Criar agendamento
+@app.route('/api/agendamentos', methods=['POST'])
 def criar_agendamento():
     try:
         data = request.get_json()
@@ -94,7 +100,9 @@ def criar_agendamento():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/agendamentos/<int:id>/status', methods=['PUT'])
+
+# Atualizar status do agendamento
+@app.route('/api/agendamentos/<int:id>/status', methods=['PUT'])
 def atualizar_status_agendamento(id):
     try:
         data = request.get_json()
@@ -103,7 +111,9 @@ def atualizar_status_agendamento(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/agendamentos/<int:id>', methods=['DELETE'])
+
+# Deletar agendamento
+@app.route('/api/agendamentos/<int:id>', methods=['DELETE'])
 def deletar_agendamento(id):
     try:
         db.delete_agendamento(id)
@@ -111,16 +121,17 @@ def deletar_agendamento(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/agendamentos/<int:id>/concluir', methods=['POST'])
+
+# Concluir agendamento
+@app.route('/api/agendamentos/<int:id>/concluir', methods=['POST'])
 def concluir_agendamento(id):
     try:
-        # Buscar dados do agendamento
         agendamentos = db.get_all_agendamentos()
         agendamento = next((a for a in agendamentos if a['id'] == id), None)
-        
+
         if not agendamento:
             return jsonify({'error': 'Agendamento não encontrado'}), 404
-        
+
         # Criar desinfecção real
         result = db.insert_desinfeccao(
             agendamento['numero_baia'],
@@ -128,10 +139,9 @@ def concluir_agendamento(id):
             agendamento['metodo'],
             f"Agendamento concluído. Original: {agendamento.get('observacao', '')}"
         )
-        
-        # Atualizar status do agendamento
+
         db.update_agendamento_status(id, 'concluido')
-        
+
         return jsonify({
             'message': 'Agendamento concluído e desinfecção registrada',
             'id_desinfeccao': result
