@@ -1,34 +1,78 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
 from flask_cors import CORS
 from app.models.database import Database
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
+from functools import wraps
 
-app = Flask(__name__, template_folder='app/templates', static_folder='app/static', static_url_path='/static') #
+app = Flask(__name__, template_folder='app/templates', static_folder='app/static', static_url_path='/static')
 CORS(app)
 
 # Configuração
 app.config.from_pyfile('config.py')
+app.secret_key = 'sua_chave_secreta_aqui'  # Para sessions
 
 # Inicializar banco de dados
 db = Database()
 
+# Credenciais fixas (em produção, use banco de dados com hash)
+USUARIO = 'admin'
+SENHA = 'admin'
+
+# Decorator para verificar autenticação
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logado' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+def verificar_credenciais(username, password):
+    return username == USUARIO and password == SENHA
+
+# Rotas de Autenticação
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if verificar_credenciais(username, password):
+            session['logado'] = True
+            session['usuario'] = username
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        else:
+            flash('Credenciais inválidas!', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Você foi desconectado!', 'info')
+    return redirect(url_for('login'))
+
+# Rotas Protegidas - Páginas HTML
 @app.route('/')
+@login_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html', usuario=session.get('usuario'))
 
-# Página de agendamentos (HTML)
 @app.route('/agendamentos')
+@login_required
 def pagina_agendamentos():
-    return render_template('agendamentos.html')
-
+    return render_template('agendamentos.html', usuario=session.get('usuario'))
 
 @app.route('/relatorio')
+@login_required
 def pagina_relatorio():
-    return render_template('relatorio.html')
+    return render_template('relatorio.html', usuario=session.get('usuario'))
 
-# Rotas para Desinfecções
+# Rotas para Desinfeccões (API)
 @app.route('/desinfeccoes', methods=['GET'])
+@login_required
 def listar_desinfeccoes():
     try:
         desinfeccoes = db.get_all_desinfeccoes()
@@ -37,6 +81,7 @@ def listar_desinfeccoes():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/desinfeccoes', methods=['POST'])
+@login_required
 def criar_desinfeccao():
     try:
         data = request.get_json()
@@ -51,6 +96,7 @@ def criar_desinfeccao():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/desinfeccoes/<int:id>', methods=['PUT'])
+@login_required
 def atualizar_desinfeccao(id):
     try:
         data = request.get_json()
@@ -66,6 +112,7 @@ def atualizar_desinfeccao(id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/desinfeccoes/<int:id>', methods=['DELETE'])
+@login_required
 def deletar_desinfeccao(id):
     try:
         db.delete_desinfeccao(id)
@@ -73,10 +120,9 @@ def deletar_desinfeccao(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Rotas para Agendamentos
-
-# Listar agendamentos
+# Rotas para Agendamentos (API)
 @app.route('/api/agendamentos', methods=['GET'])
+@login_required
 def listar_agendamentos():
     try:
         agendamentos = db.get_all_agendamentos()
@@ -84,9 +130,8 @@ def listar_agendamentos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-# Criar agendamento
 @app.route('/api/agendamentos', methods=['POST'])
+@login_required
 def criar_agendamento():
     try:
         data = request.get_json()
@@ -100,9 +145,8 @@ def criar_agendamento():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-# Atualizar status do agendamento
 @app.route('/api/agendamentos/<int:id>/status', methods=['PUT'])
+@login_required
 def atualizar_status_agendamento(id):
     try:
         data = request.get_json()
@@ -111,9 +155,8 @@ def atualizar_status_agendamento(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-# Deletar agendamento
 @app.route('/api/agendamentos/<int:id>', methods=['DELETE'])
+@login_required
 def deletar_agendamento(id):
     try:
         db.delete_agendamento(id)
@@ -121,11 +164,11 @@ def deletar_agendamento(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-# Concluir agendamento
 @app.route('/api/agendamentos/<int:id>/concluir', methods=['POST'])
+@login_required
 def concluir_agendamento(id):
     try:
+        # Buscar todos e filtrar manualmente
         agendamentos = db.get_all_agendamentos()
         agendamento = next((a for a in agendamentos if a['id'] == id), None)
 
@@ -140,6 +183,7 @@ def concluir_agendamento(id):
             f"Agendamento concluído. Original: {agendamento.get('observacao', '')}"
         )
 
+        # Atualizar status do agendamento
         db.update_agendamento_status(id, 'concluido')
 
         return jsonify({
@@ -149,46 +193,37 @@ def concluir_agendamento(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Rota para Relatório
+# Rota para Relatório (API)
 @app.route('/api/relatorio')
+@login_required
 def api_relatorio():
     try:
         desinfeccoes = db.get_all_desinfeccoes()
         
-        # Verificar se há registros
         if not desinfeccoes:
             return jsonify({'message': 'Nenhum registro de desinfecção encontrado'}), 200
 
-        # Processar dados para relatório
         for desinfeccao in desinfeccoes:
             try:
-                # Converter string para objeto datetime
                 data_desinfeccao = datetime.strptime(desinfeccao['data_desinfeccao'], '%Y-%m-%d')
-                
-                # Calcular diferença de dias (apenas dias positivos)
                 dias_desde_desinfeccao = max(0, (datetime.now() - data_desinfeccao).days)
-                
-                # Determinar status baseado nos dias
+
                 if dias_desde_desinfeccao >= 15:
                     status = 'pendente'
                 elif dias_desde_desinfeccao >= 10:
                     status = 'proximo'
                 else:
                     status = 'ok'
-                
-                # Adicionar campos calculados
+
                 desinfeccao['dias_desde_desinfeccao'] = dias_desde_desinfeccao
                 desinfeccao['status'] = status
                 desinfeccao['data_formatada'] = data_desinfeccao.strftime('%d/%m/%Y')
-                
             except ValueError as ve:
-                # Log de erro para data inválida
                 print(f"Erro ao processar data: {desinfeccao['data_desinfeccao']} - {ve}")
                 desinfeccao['dias_desde_desinfeccao'] = None
                 desinfeccao['status'] = 'erro'
                 desinfeccao['data_formatada'] = 'Data inválida'
 
-        # Ordenar por data de desinfecção (mais recente primeiro)
         desinfeccoes_ordenadas = sorted(
             desinfeccoes,
             key=lambda x: (
@@ -198,7 +233,6 @@ def api_relatorio():
             reverse=True
         )
 
-        # Estatísticas para dashboard
         estatisticas = {
             'total': len(desinfeccoes_ordenadas),
             'ok': sum(1 for d in desinfeccoes_ordenadas if d.get('status') == 'ok'),
@@ -218,7 +252,6 @@ def api_relatorio():
 
 @app.route('/debug-static')
 def debug_static():
-    import os
     static_path = os.path.join(os.path.dirname(__file__), 'static')
     css_path = os.path.join(static_path, 'css', 'style.css')
     js_path = os.path.join(static_path, 'js', 'main.js')
@@ -229,6 +262,21 @@ def debug_static():
     JS exists: {os.path.exists(js_path)}<br>
     Current working directory: {os.getcwd()}
     """
+
+@app.route('/debug-api')
+def debug_api():
+    try:
+        desinfeccoes = db.get_all_desinfeccoes()
+        agendamentos = db.get_all_agendamentos()
+        
+        return jsonify({
+            'desinfeccoes_count': len(desinfeccoes),
+            'agendamentos_count': len(agendamentos),
+            'desinfeccoes_sample': desinfeccoes[:2] if desinfeccoes else [],
+            'agendamentos_sample': agendamentos[:2] if agendamentos else []
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

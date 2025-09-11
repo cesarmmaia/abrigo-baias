@@ -44,16 +44,32 @@
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">Relatórios - Sistema de Gestão de Desinfecção de Baias</h1>
-                <a href="/" class="btn btn-outline-light">
+<header class="header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Relatórios - Sistema de Gestão de Desinfecção de Baias</h1>
+            <div class="d-flex align-items-center">
+                <!-- Nome do usuário -->
+                <span class="text-light me-3">
+                    <i class="bi bi-person"></i> {{ session.usuario }}
+                </span>
+                <!-- Botão Agendamentos -->
+                <a href="/agendamentos" class="btn btn-outline-light me-2">
+                    <i class="bi bi-calendar"></i> Agendamentos
+                </a>
+                <!-- Botão Voltar -->
+                <a href="/" class="btn btn-outline-light me-2">
                     <i class="bi bi-arrow-left"></i> Voltar para Início
+                </a>
+
+                <!-- Botão Logout -->
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light">
+                    <i class="bi bi-box-arrow-right"></i> Sair
                 </a>
             </div>
         </div>
-    </header>
+    </div>
+</header>
 
     <main class="container mt-4">
         <!-- Filtros -->

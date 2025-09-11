@@ -46,13 +46,23 @@
     </style>
 </head>
 <body>
+    <!-- Header com botão de logout -->
     <header class="header">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="h3 mb-0">Sistema de Gestão de Desinfecção de Baias</h1>
-                <a href="/agendamentos" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-calendar"></i> Agendamentos
-                </a>
+                <div>
+                    <span class="text-light me-3">
+                        <i class="bi bi-person"></i> {{ session.usuario }}
+                    </span>
+                      <!-- Botão Agendamentos -->
+                    <a href="/agendamentos" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-calendar"></i> Agendamentos
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </a>
+                </div>
             </div>
         </div>
     </header>

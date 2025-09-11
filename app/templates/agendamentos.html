@@ -50,20 +50,32 @@
 </head>
 <body>
     <header class="header">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">Agendamentos de Desinfecção</h1>
-                <div>
-                    <a href="/" class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-house"></i> Início
-                    </a>
-                    <a href="/relatorio" class="btn btn-outline-light btn-sm ms-2">
-                        <i class="bi bi-bar-chart"></i> Relatórios
-                    </a>
-                </div>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Agendamentos de Desinfecção</h1>
+            <div class="d-flex align-items-center">
+                <!-- Nome do usuário -->
+                <span class="text-light me-3">
+                    <i class="bi bi-person"></i> {{ session.usuario }}
+                </span>
+
+                <!-- Botões de navegação -->
+                <a href="/" class="btn btn-outline-light btn-sm me-2">
+                    <i class="bi bi-house"></i> Início
+                </a>
+                <a href="/relatorio" class="btn btn-outline-light btn-sm me-2">
+                    <i class="bi bi-bar-chart"></i> Relatórios
+                </a>
+
+                <!-- Botão de Logout -->
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
             </div>
         </div>
-    </header>
+    </div>
+</header>
+
 
     <main class="container mt-4">
         <div class="row">
