@@ -16,8 +16,8 @@ app.secret_key = 'sua_chave_secreta_aqui'  # Para sessions
 db = Database()
 
 # Credenciais fixas (em produção, use banco de dados com hash)
-USUARIO = 'aluno'
-SENHA = 'aluno'
+USUARIO = 'admin'
+SENHA = 'admin'
 
 # Decorator para verificar autenticação
 def login_required(f):
