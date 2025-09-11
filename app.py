@@ -16,15 +16,19 @@ app.secret_key = 'sua_chave_secreta_aqui'  # Para sessions
 db = Database()
 
 # Credenciais fixas (em produção, use banco de dados com hash)
-USUARIO = 'admin'
-SENHA = 'admin'
+USUARIO = 'aluno'
+SENHA = 'aluno'
 
 # Decorator para verificar autenticação
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'logado' not in session:
-            return jsonify({'error': 'Não autenticado'}), 401
+            # Se for rota de API → devolve JSON
+            if request.path.startswith('/api') or request.path.startswith('/desinfeccoes'):
+                return jsonify({'error': 'Não autenticado'}), 401
+            # Se for rota HTML → redireciona para login
+            return redirect(url_for('login', next=request.path))
         return f(*args, **kwargs)
     return decorated_function
 
