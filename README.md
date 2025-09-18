@@ -1,6 +1,6 @@
 # Sistema de Gestão de Desinfecção de Baias
 
-Projeto extraído do documento "Documentação Completa DeepSeek.docx".
+Projeto extraído do documento "Documentação Completa.docx".
 
 Estrutura básica pronta para rodar localmente:
 - Instale dependências: `pip install -r requirements.txt`
